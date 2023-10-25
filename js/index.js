@@ -1,22 +1,41 @@
-//When the page loads, show the first 50 monsters. Each monster's name, age, and description should be shown.
+const forwardBtn = document.getElementById("forward");
+const backBtn = document.getElementById("back");
 
-//Get container to put monsters in
-//Get Monsters name/age/description
+let pageNumb = 1;
 
-//create div
-//create h2 for name
-//create h4 for >Age: <
-//create p for Bio add >"Bio: 
+forwardBtn.addEventListener("click", ()=>{
+    deleteOldMonsters();
+    pageNumb++;
+    fetchMonsters(pageNumb);
+});
 
-fetch('http://localhost:3000/monsters/?_limit=50&_page=1')
-.then(res=>res.json())
-.then(monstersArray => renderMonsters(monstersArray))
+backBtn.addEventListener("click", ()=>{
+    deleteOldMonsters();
+    pageNumb--;
+    fetchMonsters(pageNumb);
+});
 
+function deleteOldMonsters(){
+    const oldMonstersObj = document.querySelectorAll(".monsters");
+    for(let item of oldMonstersObj){
+        item.remove();
+    };
+};
+
+fetchMonsters(1);
+
+function fetchMonsters(num){
+    fetch(`http://localhost:3000/monsters/?_limit=50&_page=${num}`)
+    .then(res=>res.json())
+    .then(monstersArray => renderMonsters(monstersArray))
+    .catch(error => console.log(error));
+};
 
 function renderMonsters(monstersArray){
     const monstersContainer = document.getElementById('monster-container');
     monstersArray.forEach(monsterObj => {
         const monsterDiv = document.createElement("div");
+        monsterDiv.className = "monsters";
         monstersContainer.appendChild(monsterDiv);
 
         const monsterName = document.createElement("h2");
@@ -25,9 +44,38 @@ function renderMonsters(monstersArray){
 
         monsterName.innerText = monsterObj.name;
         monsterAge.innerText = `Age: ${monsterObj.age}`;
-        //Come back to round age
         monsterBio.innerText = `Bio: ${monsterObj.description}`;
 
         monsterDiv.append(monsterName, monsterAge, monsterBio);
     })
+};
+
+const createBtn = document.getElementById("create");
+
+createBtn.addEventListener("click", ()=>{
+    createMonster();
+})
+
+function createMonster(){
+    const nameInput = document.getElementById("name");
+    const ageInput = document.getElementById("age");
+    const descriptionInput = document.getElementById("description");
+    let monsterObj = {
+        name: nameInput.value,
+        age: ageInput.value,
+        description: descriptionInput.value,
+    };
+    postMonster(monsterObj);
+};
+
+function postMonster(monsterObj){
+    fetch("http://localhost:3000/monsters",{
+        method: "POST",
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body:JSON.stringify(monsterObj)
+    })
+    .then(resp => resp.json())
+    .then(monster => console.log(monster))
 };
